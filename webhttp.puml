@@ -17,64 +17,60 @@ title web应用请求响应时序图
 
 autonumber
 activate 浏览器
-浏览器 ->Nginx:获取静态资源html、css、js等
+浏览器 ->Nginx:获取静态页面（html、css、js等）
 activate Nginx
-Nginx ->Nginx:判断是静态资源
+Nginx ->Nginx:匹配location
 Nginx-->浏览器:返回静态页面
-浏览器 ->浏览器 :渲染页面
+note right:Nginx正则匹配、\n动静分离
+浏览器<-->Nginx:渲染页面
 浏览器 ->浏览器 :输入账号密码
 浏览器 ->Nginx:登录
 
-note left:(ajax请求调\n用后端API)
-Nginx ->Nginx:非静态资源
-Nginx -> TomcatSever:请求连接，建立session\n会话,创建sessionID
+note left:ajax请求调\n用后端API
+Nginx ->Nginx:匹配location
+Nginx -> TomcatSever:请求服务器连接
 
 activate TomcatSever
-TomcatSever-> UserController
-activate UserController
-UserController->业务处理:将参数传递给\n业务层（map）
+TomcatSever-> 后端:调用后端API
+activate 后端
 
-activate 业务处理
-业务处理 -> 业务处理:校验账号和密码
-业务处理 -->UserController:返回验证结果
-deactivate 业务处理
 
-UserController --> TomcatSever:验证通过，将用户信\n息存放session域中（\n未通过返回错误信息）
-deactivate UserController
+后端 --> TomcatSever:返回结果与加密token
+deactivate 后端
 
-TomcatSever-->Nginx:返回请求结果与\nsessionID
+TomcatSever-->Nginx:
 deactivate TomcatSever
 
-Nginx -->浏览器
+Nginx -->浏览器:返回请求结果，保存token（cookie)
 deactivate Nginx
-浏览器 -> 浏览器:跳转页面，渲染视图\n存放sessionID
-
-'
-autonumber
-浏览器 -> Nginx:查询（携带sessionID）
+浏览器 -> Nginx:请求跳转页面
 activate Nginx
-Nginx ->Nginx:非静态资源
-Nginx -> TomcatSever:请求连接，查询sessionID\n，返回session对象
-activate TomcatSever
-TomcatSever -> UserController
-activate UserController
-UserController -> 业务处理:将参数传递给\n业务层（map）
-activate 业务处理
-业务处理 ->业务处理:执行查询操作
-UserController <-- 业务处理:返回查询结果
-deactivate 业务处理
-TomcatSever <-- UserController:统一数据格式\n返回json
+Nginx ->Nginx:匹配location
 
-deactivate UserController
-Nginx <-- TomcatSever:返回json
+浏览器<-- Nginx:返回页面
+浏览器<-->Nginx:渲染页面
+deactivate Nginx
+
+autonumber
+浏览器 -> Nginx:查询（携带token）
+activate Nginx
+Nginx ->Nginx:匹配location
+Nginx -> TomcatSever:请求连接服务器
+activate TomcatSever
+TomcatSever -> 后端:解密token，调用后端API
+activate 后端
+
+TomcatSever <-- 后端:返回请求结果
+
+deactivate 后端
+Nginx <-- TomcatSever:
 
 deactivate TomcatSever
 
 浏览器 <--Nginx
 note left:获取数据,ajax\n异步更新页面
+浏览器<-->Nginx:解析HTML,渲染页面
 deactivate Nginx
-浏览器->浏览器:解析HTML,渲染页面
-
 @enduml
 
 
